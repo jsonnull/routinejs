@@ -1,6 +1,6 @@
 {
   "name": "@routinejs/core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Express ownership graphs and control flow together, with automatic resource management.",
   "license": "MIT",
   "repository": {

@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.0.2
+
+### Async generator and `AsyncDisposable` support
+
+- `AsyncRoutineNode` — abstract base class implementing `AsyncDisposable`; uses `AsyncDisposableStack` so `.own()` accepts both `Disposable` and `AsyncDisposable`
+- `AsyncChildScope` — manages a single async generator routine's lifetime; implements `AsyncDisposable`
+- `AsyncRunner` / `defaultAsyncRunner()` — async mirror of `Runner`; awaits `gen.next()` and `gen.return()`
+- `asyncRoutine(make)` — wraps an async generator into an `AsyncRoutine<T>` with `.run(root): Promise<void>`
+- `asyncEventRoutine(defs, make)` — async counterpart of `eventRoutine()`
+- `AsyncRoutineGen` type — `AsyncGenerator<Yieldable, void, any>`
+
+### Breaking changes
+
+- `RoutineNode.own()` no longer accepts `AsyncDisposable` (was fire-and-forget; use `AsyncRoutineNode` instead)
+
+### Other
+
+- `isAsyncDisposable()` type guard exported from `@routinejs/core`
+
 ## 0.0.1
 
 Initial release of `@routinejs/core`.
