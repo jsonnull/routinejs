@@ -1,21 +1,21 @@
 import { describe, it, expect } from "vitest";
 import {
-  Controllable,
-  controller,
-  eventController,
-  eventable,
+  RoutineNode,
+  routine,
+  eventRoutine,
+  emitter,
   waitFor,
   INDEFINITELY,
 } from "../src/index.js";
-import type { ControllerGen, Eventable } from "../src/index.js";
+import type { RoutineGen, RoutineEmitter } from "../src/index.js";
 
-class App extends Controllable {}
+class App extends RoutineNode {}
 
-describe("controller()", () => {
+describe("routine()", () => {
   it("runs generator via root.child()", () => {
     const log: string[] = [];
 
-    const MyRoutine = controller(function* (app: App): ControllerGen {
+    const MyRoutine = routine(function* (app: App): RoutineGen {
       log.push("running");
       yield INDEFINITELY;
     });
@@ -31,7 +31,7 @@ describe("controller()", () => {
   it("child is owned by root — disposing root disposes child", () => {
     let childDisposed = false;
 
-    const MyRoutine = controller(function* (app: App): ControllerGen {
+    const MyRoutine = routine(function* (app: App): RoutineGen {
       try {
         yield INDEFINITELY;
       } finally {
@@ -48,10 +48,10 @@ describe("controller()", () => {
   });
 });
 
-describe("eventController()", () => {
-  it("passes eventable defs and root to generator", () => {
+describe("eventRoutine()", () => {
+  it("passes emitter defs and root to generator", () => {
     const listeners = new Set<(v: string) => void>();
-    const myEvent: Eventable<string> = eventable((cb) => {
+    const myEvent: RoutineEmitter<string> = emitter((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
@@ -59,7 +59,7 @@ describe("eventController()", () => {
     const received: string[] = [];
     let gotRoot: App | undefined;
 
-    const MyRoutine = eventController(
+    const MyRoutine = eventRoutine(
       { myEvent },
       function* (_opts, { myEvent, root }) {
         gotRoot = root;

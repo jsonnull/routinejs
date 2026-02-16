@@ -1,24 +1,24 @@
 export {
   INDEFINITELY,
   type EventReq,
-  type Eventable,
-  eventable,
+  type RoutineEmitter,
+  emitter,
   waitFor,
   type Yieldable,
-  type ControllerGen,
+  type RoutineGen,
 } from "./yieldables.js";
 
 export { type Runner, defaultRunner } from "./runner.js";
 
 export { ChildScope } from "./child-scope.js";
 
-export { Controllable, isDisposable } from "./controllable.js";
+export { RoutineNode, isDisposable } from "./routine-node.js";
 
 export {
   type Routine,
-  controller,
+  routine,
   type EventDefs,
   type AllowedYield,
   type EventRoutine,
-  eventController,
-} from "./controller.js";
+  eventRoutine,
+} from "./routine.js";

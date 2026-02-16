@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { INDEFINITELY, eventable, waitFor } from "../src/index.js";
+import { INDEFINITELY, emitter, waitFor } from "../src/index.js";
 
 describe("INDEFINITELY", () => {
   it("is a unique symbol", () => {
@@ -8,9 +8,9 @@ describe("INDEFINITELY", () => {
   });
 });
 
-describe("eventable()", () => {
-  it("creates an Eventable with _subscribe method", () => {
-    const e = eventable<number>((cb) => {
+describe("emitter()", () => {
+  it("creates a RoutineEmitter with _subscribe method", () => {
+    const e = emitter<number>((cb) => {
       return { [Symbol.dispose]() {} };
     });
     expect(typeof e._subscribe).toBe("function");
@@ -18,7 +18,7 @@ describe("eventable()", () => {
 
   it("_subscribe receives callbacks and returns Disposable", () => {
     const listeners = new Set<(v: number) => void>();
-    const e = eventable<number>((cb) => {
+    const e = emitter<number>((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
@@ -36,12 +36,12 @@ describe("eventable()", () => {
 });
 
 describe("waitFor()", () => {
-  it("returns the eventable cast as EventReq", () => {
-    const e = eventable<string>((cb) => ({
+  it("returns the emitter cast as EventReq", () => {
+    const e = emitter<string>((cb) => ({
       [Symbol.dispose]() {},
     }));
     const req = waitFor(e);
-    // At runtime, req IS the eventable object (just type-cast)
+    // At runtime, req IS the emitter object (just type-cast)
     expect(req).toBe(e);
   });
 });

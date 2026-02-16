@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { ChildScope, INDEFINITELY, eventable, waitFor } from "../src/index.js";
-import type { ControllerGen } from "../src/index.js";
+import { ChildScope, INDEFINITELY, emitter, waitFor } from "../src/index.js";
+import type { RoutineGen } from "../src/index.js";
 
 describe("ChildScope", () => {
   it("constructor starts the generator immediately", () => {
     const log: string[] = [];
 
-    const scope = new ChildScope(function* (): ControllerGen {
+    const scope = new ChildScope(function* (): RoutineGen {
       log.push("started");
       yield INDEFINITELY;
     });
@@ -17,7 +17,7 @@ describe("ChildScope", () => {
   it("dispose() stops the generator and sets disposed flag", () => {
     const log: string[] = [];
 
-    const scope = new ChildScope(function* (): ControllerGen {
+    const scope = new ChildScope(function* (): RoutineGen {
       try {
         log.push("started");
         yield INDEFINITELY;
@@ -37,7 +37,7 @@ describe("ChildScope", () => {
   it("dispose() is idempotent", () => {
     let disposeCount = 0;
 
-    const scope = new ChildScope(function* (): ControllerGen {
+    const scope = new ChildScope(function* (): RoutineGen {
       try {
         yield INDEFINITELY;
       } finally {
@@ -54,12 +54,12 @@ describe("ChildScope", () => {
   it("resume() is no-op after dispose", () => {
     const log: string[] = [];
     const listeners = new Set<(v: number) => void>();
-    const e = eventable<number>((cb) => {
+    const e = emitter<number>((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
 
-    const scope = new ChildScope(function* (): ControllerGen {
+    const scope = new ChildScope(function* (): RoutineGen {
       const v = yield waitFor(e);
       log.push(`got: ${v}`);
     });
@@ -73,7 +73,7 @@ describe("ChildScope", () => {
   it("generator that completes without yielding sets up cleanly", () => {
     const log: string[] = [];
 
-    const scope = new ChildScope(function* (): ControllerGen {
+    const scope = new ChildScope(function* (): RoutineGen {
       log.push("done");
     });
 

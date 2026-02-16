@@ -1,4 +1,4 @@
-import { ChildScope, type ControllerGen } from "@routinejs/core";
+import { ChildScope, type RoutineGen } from "@routinejs/core";
 
 export class RoomManager implements Disposable {
   readonly #rooms = new Map<string, ChildScope>();
@@ -7,7 +7,7 @@ export class RoomManager implements Disposable {
     return this.#rooms.has(name);
   }
 
-  open(name: string, make: () => ControllerGen): ChildScope {
+  open(name: string, make: () => RoutineGen): ChildScope {
     const scope = new ChildScope(make);
     this.#rooms.set(name, scope);
     return scope;

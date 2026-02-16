@@ -1,4 +1,4 @@
-import { eventable, type Eventable } from "@routinejs/core";
+import { emitter, type RoutineEmitter } from "@routinejs/core";
 
 export type JoinEvent = { user: string; room: string };
 export type MessageEvent = { user: string; room: string; text: string };
@@ -9,17 +9,17 @@ export class ChatService implements Disposable {
   #messageListeners = new Set<(e: MessageEvent) => void>();
   #leaveListeners = new Set<(e: LeaveEvent) => void>();
 
-  readonly onJoin: Eventable<JoinEvent> = eventable((cb) => {
+  readonly onJoin: RoutineEmitter<JoinEvent> = emitter((cb) => {
     this.#joinListeners.add(cb);
     return { [Symbol.dispose]: () => void this.#joinListeners.delete(cb) };
   });
 
-  readonly onMessage: Eventable<MessageEvent> = eventable((cb) => {
+  readonly onMessage: RoutineEmitter<MessageEvent> = emitter((cb) => {
     this.#messageListeners.add(cb);
     return { [Symbol.dispose]: () => void this.#messageListeners.delete(cb) };
   });
 
-  readonly onLeave: Eventable<LeaveEvent> = eventable((cb) => {
+  readonly onLeave: RoutineEmitter<LeaveEvent> = emitter((cb) => {
     this.#leaveListeners.add(cb);
     return { [Symbol.dispose]: () => void this.#leaveListeners.delete(cb) };
   });

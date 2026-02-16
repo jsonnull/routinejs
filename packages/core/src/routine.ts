@@ -1,11 +1,11 @@
-import { INDEFINITELY, type EventReq, type Eventable } from "./yieldables.js";
-import { Controllable } from "./controllable.js";
+import { INDEFINITELY, type EventReq, type RoutineEmitter } from "./yieldables.js";
+import { RoutineNode } from "./routine-node.js";
 
-export type Routine<T extends Controllable> = {
+export type Routine<T extends RoutineNode> = {
   run(root: T): void;
 };
 
-export function controller<T extends Controllable>(
+export function routine<T extends RoutineNode>(
   make: (root: T) => Generator<any, void, any>,
 ): Routine<T> {
   return {
@@ -15,21 +15,21 @@ export function controller<T extends Controllable>(
   };
 }
 
-export type EventDefs = Record<string, Eventable<any>>;
+export type EventDefs = Record<string, RoutineEmitter<any>>;
 
-type EventPayload<E> = E extends Eventable<infer T> ? T : never;
+type EventPayload<E> = E extends RoutineEmitter<infer T> ? T : never;
 type EventUnion<Defs extends EventDefs> = EventPayload<Defs[keyof Defs]>;
 
 export type AllowedYield<Defs extends EventDefs> =
   | typeof INDEFINITELY
   | EventReq<EventUnion<Defs>>;
 
-export type EventRoutine<T extends Controllable, Defs extends EventDefs> = {
+export type EventRoutine<T extends RoutineNode, Defs extends EventDefs> = {
   run(root: T): void;
 };
 
-export function eventController<
-  T extends Controllable,
+export function eventRoutine<
+  T extends RoutineNode,
   Defs extends EventDefs,
 >(
   defs: Defs,

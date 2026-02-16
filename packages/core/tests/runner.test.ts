@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { INDEFINITELY, eventable, waitFor, defaultRunner } from "../src/index.js";
-import type { ControllerGen } from "../src/index.js";
+import { INDEFINITELY, emitter, waitFor, defaultRunner } from "../src/index.js";
+import type { RoutineGen } from "../src/index.js";
 
 describe("defaultRunner", () => {
   it("parks generator on INDEFINITELY yield", () => {
     const runner = defaultRunner();
     const log: string[] = [];
 
-    function* gen(): ControllerGen {
+    function* gen(): RoutineGen {
       log.push("before");
       yield INDEFINITELY;
       log.push("after"); // should never run
@@ -27,14 +27,14 @@ describe("defaultRunner", () => {
   it("subscribes on EventReq yield and resumes with payload", () => {
     const runner = defaultRunner();
     const listeners = new Set<(v: number) => void>();
-    const e = eventable<number>((cb) => {
+    const e = emitter<number>((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
 
     const received: number[] = [];
 
-    function* gen(): ControllerGen {
+    function* gen(): RoutineGen {
       const v = yield waitFor(e);
       received.push(v);
     }
@@ -57,14 +57,14 @@ describe("defaultRunner", () => {
   it("unsubscribes after first event (single-shot)", () => {
     const runner = defaultRunner();
     const listeners = new Set<(v: string) => void>();
-    const e = eventable<string>((cb) => {
+    const e = emitter<string>((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
 
     const received: string[] = [];
 
-    function* gen(): ControllerGen {
+    function* gen(): RoutineGen {
       while (true) {
         const v = yield waitFor(e);
         received.push(v);
@@ -95,7 +95,7 @@ describe("defaultRunner", () => {
     const runner = defaultRunner();
     let disposed = false;
 
-    function* gen(): ControllerGen {
+    function* gen(): RoutineGen {
       // Generator completes immediately (no yield)
     }
 
@@ -126,12 +126,12 @@ describe("defaultRunner", () => {
   it("disposeGen cleans up subscriptions", () => {
     const runner = defaultRunner();
     const listeners = new Set<(v: number) => void>();
-    const e = eventable<number>((cb) => {
+    const e = emitter<number>((cb) => {
       listeners.add(cb);
       return { [Symbol.dispose]: () => void listeners.delete(cb) };
     });
 
-    function* gen(): ControllerGen {
+    function* gen(): RoutineGen {
       yield waitFor(e);
     }
 

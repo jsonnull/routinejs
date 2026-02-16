@@ -1,16 +1,16 @@
 import {
-  Controllable,
-  controller,
+  RoutineNode,
+  routine,
   waitFor,
   INDEFINITELY,
-  type ControllerGen,
+  type RoutineGen,
 } from "@routinejs/core";
 import { ChatService } from "./chat-service.js";
 import { ConnectionPool } from "./connection-pool.js";
 import { RoomManager } from "./room-manager.js";
-import { roomController } from "./room-controller.js";
+import { roomRoutine } from "./room-routine.js";
 
-export class App extends Controllable {
+export class App extends RoutineNode {
   readonly chat: ChatService;
   readonly rooms: RoomManager;
 
@@ -21,13 +21,13 @@ export class App extends Controllable {
   }
 }
 
-export const AppRoutine = controller(function* (app: App): ControllerGen {
+export const AppRoutine = routine(function* (app: App): RoutineGen {
   console.log("[app] started");
 
   // yield INDEFINITELY — parks this child generator forever. The `using`
   // resource stays alive until the app disposes this child on shutdown.
   // Contrast with the yield waitFor() loop below, which suspends and resumes.
-  app.child(function* (): ControllerGen {
+  app.child(function* (): RoutineGen {
     using _conn = new ConnectionPool();
     console.log("[app] connection pool ready");
     yield INDEFINITELY;
@@ -39,7 +39,7 @@ export const AppRoutine = controller(function* (app: App): ControllerGen {
 
     if (!app.rooms.has(ev.room)) {
       console.log(`[app] opening room "${ev.room}"`);
-      app.rooms.open(ev.room, () => roomController(app, ev.room));
+      app.rooms.open(ev.room, () => roomRoutine(app, ev.room));
     }
 
     console.log(`[app] ${ev.user} joined "${ev.room}"`);

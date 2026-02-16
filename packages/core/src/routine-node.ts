@@ -1,11 +1,11 @@
-import type { ControllerGen } from "./yieldables.js";
+import type { RoutineGen } from "./yieldables.js";
 import { ChildScope } from "./child-scope.js";
 
 export function isDisposable(x: any): x is Disposable {
   return x && typeof x === "object" && typeof x[Symbol.dispose] === "function";
 }
 
-export abstract class Controllable implements Disposable {
+export abstract class RoutineNode implements Disposable {
   #stack = new DisposableStack();
 
   own<T extends Disposable | AsyncDisposable | null | undefined>(d: T): T {
@@ -23,7 +23,7 @@ export abstract class Controllable implements Disposable {
     return d;
   }
 
-  child(make: () => ControllerGen): ChildScope {
+  child(make: () => RoutineGen): ChildScope {
     const scope = new ChildScope(make);
     this.own(scope);
     return scope;

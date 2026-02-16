@@ -1,22 +1,22 @@
 import { describe, it, expectTypeOf } from "vitest";
 import {
   INDEFINITELY,
-  eventable,
+  emitter,
   waitFor,
-  controller,
-  eventController,
-  Controllable,
+  routine,
+  eventRoutine,
+  RoutineNode,
   type EventReq,
-  type Eventable as EventableType,
-  type ControllerGen,
+  type RoutineEmitter as RoutineEmitterType,
+  type RoutineGen,
   type AllowedYield,
 } from "../src/index.js";
 
-class App extends Controllable {}
+class App extends RoutineNode {}
 
 describe("type-level tests", () => {
-  it("waitFor() returns EventReq<T> matching the Eventable<T>", () => {
-    const e = eventable<number>(() => ({ [Symbol.dispose]() {} }));
+  it("waitFor() returns EventReq<T> matching the RoutineEmitter<T>", () => {
+    const e = emitter<number>(() => ({ [Symbol.dispose]() {} }));
     const req = waitFor(e);
     expectTypeOf(req).toEqualTypeOf<EventReq<number>>();
   });
@@ -25,28 +25,28 @@ describe("type-level tests", () => {
     expectTypeOf(INDEFINITELY).toBeSymbol();
   });
 
-  it("controller() infers root type from make function", () => {
-    const r = controller(function* (app: App): ControllerGen {
+  it("routine() infers root type from make function", () => {
+    const r = routine(function* (app: App): RoutineGen {
       yield INDEFINITELY;
     });
     // run should accept App
     expectTypeOf(r.run).toBeCallableWith(new App());
   });
 
-  it("eventController() ctx has event defs plus root", () => {
-    const e = eventable<string>(() => ({ [Symbol.dispose]() {} }));
+  it("eventRoutine() ctx has event defs plus root", () => {
+    const e = emitter<string>(() => ({ [Symbol.dispose]() {} }));
 
-    eventController(
+    eventRoutine(
       { myEvent: e },
       function* (_opts, ctx) {
-        expectTypeOf(ctx.myEvent).toEqualTypeOf<EventableType<string>>();
+        expectTypeOf(ctx.myEvent).toEqualTypeOf<RoutineEmitterType<string>>();
         expectTypeOf(ctx.root).toEqualTypeOf<App>();
       },
     );
   });
 
   it("AllowedYield constrains to INDEFINITELY or EventReq of registered events", () => {
-    type Defs = { a: EventableType<number>; b: EventableType<string> };
+    type Defs = { a: RoutineEmitterType<number>; b: RoutineEmitterType<string> };
     type Allowed = AllowedYield<Defs>;
     expectTypeOf<typeof INDEFINITELY>().toMatchTypeOf<Allowed>();
     expectTypeOf<EventReq<number>>().toMatchTypeOf<Allowed>();

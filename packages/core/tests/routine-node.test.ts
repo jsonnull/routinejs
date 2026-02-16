@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { Controllable, INDEFINITELY } from "../src/index.js";
-import type { ControllerGen } from "../src/index.js";
+import { RoutineNode, INDEFINITELY } from "../src/index.js";
+import type { RoutineGen } from "../src/index.js";
 
-class TestControllable extends Controllable {}
+class TestRoutineNode extends RoutineNode {}
 
-describe("Controllable", () => {
+describe("RoutineNode", () => {
   it("own() ties a disposable to the instance lifetime", () => {
-    const ctrl = new TestControllable();
+    const ctrl = new TestRoutineNode();
     let disposed = false;
 
     ctrl.own({
@@ -21,7 +21,7 @@ describe("Controllable", () => {
   });
 
   it("own() handles null/undefined gracefully", () => {
-    const ctrl = new TestControllable();
+    const ctrl = new TestRoutineNode();
     const result = ctrl.own(null);
     expect(result).toBeNull();
     const result2 = ctrl.own(undefined);
@@ -31,7 +31,7 @@ describe("Controllable", () => {
   });
 
   it("own() wraps AsyncDisposable with fire-and-forget", () => {
-    const ctrl = new TestControllable();
+    const ctrl = new TestRoutineNode();
     let asyncDisposed = false;
 
     ctrl.own({
@@ -46,7 +46,7 @@ describe("Controllable", () => {
   });
 
   it("dispose() disposes all owned resources in LIFO order", () => {
-    const ctrl = new TestControllable();
+    const ctrl = new TestRoutineNode();
     const order: number[] = [];
 
     ctrl.own({ [Symbol.dispose]: () => order.push(1) });
@@ -59,10 +59,10 @@ describe("Controllable", () => {
   });
 
   it("child() returns an auto-owned ChildScope", () => {
-    const ctrl = new TestControllable();
+    const ctrl = new TestRoutineNode();
     const log: string[] = [];
 
-    const scope = ctrl.child(function* (): ControllerGen {
+    const scope = ctrl.child(function* (): RoutineGen {
       log.push("started");
       yield INDEFINITELY;
       log.push("resumed"); // should not run
@@ -71,7 +71,7 @@ describe("Controllable", () => {
     expect(log).toEqual(["started"]);
     expect(scope.disposed).toBe(false);
 
-    // Disposing the controllable should dispose the child scope
+    // Disposing the routine node should dispose the child scope
     ctrl[Symbol.dispose]();
     expect(scope.disposed).toBe(true);
   });

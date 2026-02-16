@@ -1,9 +1,9 @@
-import { INDEFINITELY, type ControllerGen, type Eventable, type Yieldable } from "./yieldables.js";
+import { INDEFINITELY, type RoutineGen, type RoutineEmitter, type Yieldable } from "./yieldables.js";
 
 export interface Runner {
-  attach(gen: ControllerGen): void;
-  step(gen: ControllerGen, resumeValue?: any): void;
-  disposeGen(gen: ControllerGen): void;
+  attach(gen: RoutineGen): void;
+  step(gen: RoutineGen, resumeValue?: any): void;
+  disposeGen(gen: RoutineGen): void;
 }
 
 type GenState = {
@@ -13,9 +13,9 @@ type GenState = {
 };
 
 export function defaultRunner(): Runner {
-  const states = new WeakMap<ControllerGen, GenState>();
+  const states = new WeakMap<RoutineGen, GenState>();
 
-  function state(gen: ControllerGen): GenState {
+  function state(gen: RoutineGen): GenState {
     let s = states.get(gen);
     if (!s) {
       s = { stack: new DisposableStack(), parked: false };
@@ -59,11 +59,11 @@ export function defaultRunner(): Runner {
         return;
       }
 
-      const maybeEventable = y as any as Eventable<any>;
-      if (maybeEventable && typeof maybeEventable._subscribe === "function") {
+      const maybeRoutineEmitter = y as any as RoutineEmitter<any>;
+      if (maybeRoutineEmitter && typeof maybeRoutineEmitter._subscribe === "function") {
         let active = true;
 
-        const unsub = maybeEventable._subscribe((ev) => {
+        const unsub = maybeRoutineEmitter._subscribe((ev) => {
           if (!active) return;
           active = false;
           try {

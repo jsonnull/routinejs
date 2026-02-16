@@ -1,13 +1,13 @@
-import type { ControllerGen } from "./yieldables.js";
+import type { RoutineGen } from "./yieldables.js";
 import { defaultRunner, type Runner } from "./runner.js";
 
 export class ChildScope implements Disposable {
   readonly #runner: Runner;
-  readonly #gen: ControllerGen;
+  readonly #gen: RoutineGen;
 
   disposed = false;
 
-  constructor(make: () => ControllerGen, runner?: Runner) {
+  constructor(make: () => RoutineGen, runner?: Runner) {
     this.#runner = runner ?? defaultRunner();
     this.#gen = make();
     this.#runner.attach(this.#gen);

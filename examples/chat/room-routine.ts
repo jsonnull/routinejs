@@ -1,13 +1,13 @@
-import { waitFor, type ControllerGen } from "@routinejs/core";
+import { waitFor, type RoutineGen } from "@routinejs/core";
 import type { App } from "./app.js";
 import { RoomLog } from "./room-log.js";
 
-export function* roomController(app: App, roomName: string): ControllerGen {
+export function* roomRoutine(app: App, roomName: string): RoutineGen {
   // `using` scopes the log to this generator's lifetime.
   // When the ChildScope disposes this generator, RoomLog[Symbol.dispose]() runs.
   using log = new RoomLog(roomName);
 
-  console.log(`[room:${roomName}] controller started`);
+  console.log(`[room:${roomName}] routine started`);
 
   // yield waitFor(...) — suspends until the next event, then resumes with payload.
   while (true) {
