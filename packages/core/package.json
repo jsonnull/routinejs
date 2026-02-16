@@ -1,6 +1,16 @@
 {
   "name": "@routinejs/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "description": "Express ownership graphs and control flow together, with automatic resource management.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jsonnull/routinejs",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "files": ["dist"],
   "main": "./dist/routinejs-core.cjs",
