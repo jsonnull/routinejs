@@ -26,3 +26,6 @@ export type Yieldable = typeof INDEFINITELY | EventReq<any>;
 
 /** A routine generator. */
 export type RoutineGen = Generator<Yieldable, void, any>;
+
+/** An async routine generator. */
+export type AsyncRoutineGen = AsyncGenerator<Yieldable, void, any>;

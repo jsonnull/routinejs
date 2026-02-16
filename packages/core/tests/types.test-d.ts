@@ -5,14 +5,19 @@ import {
   waitFor,
   routine,
   eventRoutine,
+  asyncRoutine,
   RoutineNode,
+  AsyncRoutineNode,
   type EventReq,
   type RoutineEmitter as RoutineEmitterType,
   type RoutineGen,
+  type AsyncRoutineGen,
   type AllowedYield,
+  type Yieldable,
 } from "../src/index.js";
 
 class App extends RoutineNode {}
+class AsyncApp extends AsyncRoutineNode {}
 
 describe("type-level tests", () => {
   it("waitFor() returns EventReq<T> matching the RoutineEmitter<T>", () => {
@@ -51,5 +56,28 @@ describe("type-level tests", () => {
     expectTypeOf<typeof INDEFINITELY>().toMatchTypeOf<Allowed>();
     expectTypeOf<EventReq<number>>().toMatchTypeOf<Allowed>();
     expectTypeOf<EventReq<string>>().toMatchTypeOf<Allowed>();
+  });
+
+  it("AsyncRoutineGen is AsyncGenerator<Yieldable, void, any>", () => {
+    expectTypeOf<AsyncRoutineGen>().toEqualTypeOf<
+      AsyncGenerator<Yieldable, void, any>
+    >();
+  });
+
+  it("AsyncRoutineNode matches AsyncDisposable but not Disposable", () => {
+    expectTypeOf<AsyncApp>().toMatchTypeOf<AsyncDisposable>();
+    expectTypeOf<AsyncApp>().not.toMatchTypeOf<Disposable>();
+  });
+
+  it("asyncRoutine() infers root type from make function", () => {
+    const r = asyncRoutine(async function* (app: AsyncApp): AsyncRoutineGen {
+      yield INDEFINITELY;
+    });
+    expectTypeOf(r.run).toBeCallableWith(new AsyncApp());
+    expectTypeOf(r.run(new AsyncApp())).toEqualTypeOf<Promise<void>>();
+  });
+
+  it("AsyncGenerator is not assignable to RoutineGen", () => {
+    expectTypeOf<AsyncRoutineGen>().not.toMatchTypeOf<RoutineGen>();
   });
 });

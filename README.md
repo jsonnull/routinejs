@@ -47,9 +47,11 @@ const MyRoutine = routine(function* (app: App): RoutineGen {
 });
 ```
 
-### Synchronous execution
+### Sync and async
 
-Currently everything is synchronous: events fire, generators resume, the stack unwinds. No promises, no microtask queues. Async generator and `AsyncDisposable` support is planned.
+Sync routines (`RoutineNode` + `routine()`) are fully synchronous: events fire, generators resume, the stack unwinds. No promises, no microtask queues.
+
+Async routines (`AsyncRoutineNode` + `asyncRoutine()`) use async generators and `AsyncDisposable`. Generators can `await` between yields, resources can be async-disposed, and `await using` works naturally.
 
 ## Install
 
@@ -97,13 +99,55 @@ counter.increment(5); // total: 6
 counter[Symbol.dispose](); // tears down the routine and all owned resources
 ```
 
+## Async quick example
+
+Async routines can `await` between yields — useful when processing an event requires async work (database writes, network calls, etc).
+
+```ts
+import { AsyncRoutineNode, asyncRoutine, emitter, waitFor, type AsyncRoutineGen, type RoutineEmitter } from "@routinejs/core";
+
+class App extends AsyncRoutineNode {
+  readonly onMessage: RoutineEmitter<string>;
+  #listeners = new Set<(msg: string) => void>();
+
+  constructor() {
+    super();
+    this.onMessage = emitter((cb) => {
+      this.#listeners.add(cb);
+      return { [Symbol.dispose]: () => void this.#listeners.delete(cb) };
+    });
+  }
+
+  send(msg: string) {
+    for (const cb of [...this.#listeners]) cb(msg);
+  }
+}
+
+const Logger = asyncRoutine(async function* (app: App): AsyncRoutineGen {
+  while (true) {
+    const msg = yield waitFor(app.onMessage);
+    await writeToFile(msg); // can await between yields
+    console.log(`logged: ${msg}`);
+  }
+});
+
+{
+  await using app = new App();
+  await Logger.run(app); // resolves once the generator reaches its first yield
+  app.send("hello");     // triggers the routine; async processing begins
+}
+// app is async-disposed here, tearing down the routine and all owned resources
+```
+
+Note: `await Logger.run(app)` resolves as soon as the generator reaches its first `yield`, not when the routine finishes. Events fired on the node trigger the generator to resume, but async work between yields (like `await writeToFile(msg)`) means the generator re-subscribes only after that work completes.
+
 ## API
 
 ### `RoutineNode`
 
 Abstract base class for objects that own resources and child routines.
 
-- `.own(resource)` – ties a `Disposable` or `AsyncDisposable` to this node's lifetime
+- `.own(resource)` – ties a `Disposable` to this node's lifetime
 - `.child(make)` – spawns a child generator routine, owned by this node
 - `[Symbol.dispose]()` – tears down the node and everything it owns
 
@@ -115,6 +159,23 @@ class App extends RoutineNode {
 
 const app = new App();
 app[Symbol.dispose](); // disposes rooms, then chat (LIFO)
+```
+
+### `AsyncRoutineNode`
+
+Async counterpart of `RoutineNode`. Implements `AsyncDisposable` and uses `AsyncDisposableStack` internally, so `.own()` accepts both sync and async disposables.
+
+- `.own(resource)` – ties a `Disposable` or `AsyncDisposable` to this node's lifetime
+- `.child(make)` – spawns an async child generator routine, returns `Promise<AsyncChildScope>`
+- `[Symbol.asyncDispose]()` – async teardown of the node and everything it owns
+
+```ts
+class App extends AsyncRoutineNode {
+  readonly conn = this.own(new AsyncConnection()); // async-disposed when App is disposed
+}
+
+const app = new App();
+await app[Symbol.asyncDispose](); // awaits async cleanup of conn
 ```
 
 ### `routine(make)`
@@ -130,6 +191,22 @@ const MyRoutine = routine(function* (app: App): RoutineGen {
 MyRoutine.run(app); // starts a child generator owned by app
 ```
 
+### `asyncRoutine(make)`
+
+Async counterpart of `routine()`. Wraps an async generator function into an `AsyncRoutine<T>`. Call `.run(root)` to start the routine; the returned promise resolves once the generator reaches its first `yield`.
+
+```ts
+const MyRoutine = asyncRoutine(async function* (app: App): AsyncRoutineGen {
+  await using conn = app.own(new AsyncConnection());
+  while (true) {
+    const msg = yield waitFor(app.messages);
+    await processMessage(msg);
+  }
+});
+
+await MyRoutine.run(app); // resolves when generator hits first yield
+```
+
 ### `eventRoutine(defs, make)`
 
 Like `routine()`, but passes a map of event emitters (plus `root`) into the generator's context. Constrains `yield` to only the declared events.
@@ -140,6 +217,20 @@ const ChatRoutine = eventRoutine(
   function* (_opts, { onJoin, onMessage, root }) {
     const join = yield waitFor(onJoin);
     console.log(`${join.user} joined`);
+  },
+);
+```
+
+### `asyncEventRoutine(defs, make)`
+
+Async counterpart of `eventRoutine()`. Same event-map pattern, but with an async generator.
+
+```ts
+const ChatRoutine = asyncEventRoutine(
+  { onJoin: app.chat.onJoin, onMessage: app.chat.onMessage },
+  async function* (_opts, { onJoin, onMessage, root }) {
+    const join = yield waitFor(onJoin);
+    await notifyChannel(join.user);
   },
 );
 ```
@@ -183,16 +274,25 @@ app.child(function* (): RoutineGen {
 
 Low-level scope created by `RoutineNode.child()`. Manages a single generator's lifetime. You typically don't construct this directly (`RoutineNode.child()` and `routine()` handle it).
 
+### `AsyncChildScope`
+
+Low-level async scope created by `AsyncRoutineNode.child()`. Manages a single async generator's lifetime. You typically don't construct this directly (`AsyncRoutineNode.child()` and `asyncRoutine()` handle it).
+
 ### Types
 
 - `RoutineGen` – `Generator<Yieldable, void, any>`, the return type for routine generator functions
+- `AsyncRoutineGen` – `AsyncGenerator<Yieldable, void, any>`, the return type for async routine generator functions
 - `RoutineEmitter<T>` – object with `_subscribe(cb): Disposable`, created by `emitter()`
 - `Routine<T>` – object with `.run(root: T): void`, created by `routine()`
+- `AsyncRoutine<T>` – object with `.run(root: T): Promise<void>`, created by `asyncRoutine()`
 - `EventRoutine<T, Defs>` – object with `.run(root: T): void`, created by `eventRoutine()`
+- `AsyncEventRoutine<T, Defs>` – object with `.run(root: T): Promise<void>`, created by `asyncEventRoutine()`
 - `EventReq<T>` – opaque yield token returned by `waitFor()`
-- `EventDefs` – `Record<string, RoutineEmitter<any>>`, map of named emitters for `eventRoutine()`
+- `EventDefs` – `Record<string, RoutineEmitter<any>>`, map of named emitters for `eventRoutine()` / `asyncEventRoutine()`
 - `AllowedYield<Defs>` – union of `INDEFINITELY` and `EventReq` for each emitter in `Defs`
 - `Yieldable` – `typeof INDEFINITELY | EventReq<any>`, anything a routine can yield
+- `Runner` – sync runner interface used by `ChildScope`
+- `AsyncRunner` – async runner interface used by `AsyncChildScope`
 
 ## Examples
 

@@ -30,21 +30,6 @@ describe("RoutineNode", () => {
     ctrl[Symbol.dispose]();
   });
 
-  it("own() wraps AsyncDisposable with fire-and-forget", () => {
-    const ctrl = new TestRoutineNode();
-    let asyncDisposed = false;
-
-    ctrl.own({
-      async [Symbol.asyncDispose]() {
-        asyncDisposed = true;
-      },
-    });
-
-    ctrl[Symbol.dispose]();
-    // The async dispose is fire-and-forget, so it should have been triggered
-    expect(asyncDisposed).toBe(true);
-  });
-
   it("dispose() disposes all owned resources in LIFO order", () => {
     const ctrl = new TestRoutineNode();
     const order: number[] = [];
