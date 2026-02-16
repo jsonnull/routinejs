@@ -1,1 +1,5 @@
-approveBuilds: esbuild
+packages:
+  - "packages/*"
+  - "examples/*"
+approveBuilds:
+  - esbuild

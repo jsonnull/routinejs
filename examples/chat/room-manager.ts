@@ -1,4 +1,4 @@
-import { ChildScope, type ControllerGen } from "../../src/index.js";
+import { ChildScope, type ControllerGen } from "@routinejs/core";
 
 export class RoomManager implements Disposable {
   readonly #rooms = new Map<string, ChildScope>();

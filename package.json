@@ -1,42 +1,11 @@
 {
   "name": "routine-js",
   "version": "0.0.0",
-  "description": "",
-  "type": "module",
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/routine-js.cjs",
-  "module": "./dist/routine-js.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/routine-js.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/routine-js.cjs"
-      }
-    }
-  },
+  "private": true,
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:typecheck": "vitest --typecheck.only --typecheck.include='tests/**/*.test-d.ts' --run",
-    "prepublishOnly": "pnpm build"
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:typecheck": "pnpm -r test:typecheck"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.28.0",
-  "devDependencies": {
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
-    "vite-plugin-dts": "^4.5.4",
-    "vitest": "^4.0.18"
-  }
+  "packageManager": "pnpm@10.28.0"
 }

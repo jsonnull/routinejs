@@ -1,4 +1,4 @@
-import { eventable, type Eventable } from "../../src/index.js";
+import { eventable, type Eventable } from "@routinejs/core";
 
 export type JoinEvent = { user: string; room: string };
 export type MessageEvent = { user: string; room: string; text: string };

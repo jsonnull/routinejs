@@ -1,4 +1,4 @@
-import { waitFor, type ControllerGen } from "../../src/index.js";
+import { waitFor, type ControllerGen } from "@routinejs/core";
 import type { App } from "./app.js";
 import { RoomLog } from "./room-log.js";
 

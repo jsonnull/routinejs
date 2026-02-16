@@ -4,7 +4,7 @@ import {
   waitFor,
   INDEFINITELY,
   type ControllerGen,
-} from "../../src/index.js";
+} from "@routinejs/core";
 import { ChatService } from "./chat-service.js";
 import { ConnectionPool } from "./connection-pool.js";
 import { RoomManager } from "./room-manager.js";

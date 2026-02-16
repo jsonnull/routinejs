@@ -24,7 +24,7 @@ export default defineConfig({
       entry: resolve(__dirname, "src/index.ts"),
       name: "RoutineJS",
       formats: ["es", "cjs"],
-      fileName: "routine-js",
+      fileName: "routinejs-core",
     },
   },
 });
